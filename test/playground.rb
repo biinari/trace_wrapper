@@ -24,6 +24,30 @@ class PlayClass
   end
 end
 
+module PlayArgs
+  module_function
+
+  def full(x, y = 1, a: 3)
+    [x, y, a]
+  end
+
+  def full_rest(x, y = 1, *args, a: 2, **kwargs, &block)
+    block.call(x, y, *args, a: a, **kwargs)
+  end
+
+  def rest(*args)
+    args
+  end
+
+  def key_rest(**kwargs)
+    kwargs
+  end
+
+  def both_rest(*args, **kwargs)
+    [args, kwargs]
+  end
+end
+
 class PlayFib
   # Naive fibonacci implementation (we want to test some deep nesting)
   def fib(n)

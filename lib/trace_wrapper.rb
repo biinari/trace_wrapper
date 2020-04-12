@@ -106,18 +106,31 @@ class TraceWrapper
 
   def wrapping_module(receiver, methods_type)
     method_names = receiver.public_send(methods_type) - Object.methods
+    get_method = methods_type == :methods ? :method : :instance_method
     dot = methods_type == :methods ? '.' : '#'
     trace_call = method(:trace_call)
     trace_return = method(:trace_return)
+    key_args = method(:key_args?)
 
     mod = Module.new do
       method_names.each do |name|
-        define_method(name, lambda do |*args, **kwargs, &block|
-          trace_call.call(receiver, dot, name, *args, **kwargs)
-          result = super(*args, **kwargs, &block)
-          trace_return.call(receiver, dot, name, result)
-          result
-        end)
+        wrap_method =
+          if key_args.call(receiver.public_send(get_method, name))
+            lambda do |*args, **kwargs, &block|
+              trace_call.call(receiver, dot, name, *args, **kwargs)
+              result = super(*args, **kwargs, &block)
+              trace_return.call(receiver, dot, name, result)
+              result
+            end
+          else
+            lambda do |*args, &block|
+              trace_call.call(receiver, dot, name, *args)
+              result = super(*args, &block)
+              trace_return.call(receiver, dot, name, result)
+              result
+            end
+          end
+        define_method(name, wrap_method)
       end
     end
     unwrapper = lambda do
@@ -138,6 +151,10 @@ class TraceWrapper
     writeln("#{function(receiver, dot, method_name)} " \
             "#{colour('return', :yellow)} " \
             "#{colour(short_inspect(result), :purple)}")
+  end
+
+  def key_args?(method)
+    method.parameters.any? { |k, _| %i[keyrest key].include?(k) }
   end
 
   def main

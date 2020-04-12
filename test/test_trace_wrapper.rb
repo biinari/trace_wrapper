@@ -25,6 +25,7 @@ class TestTraceWrapper < Minitest::Test
   ::TraceWrapper::COLOURS.each do |k, v|
     const_set(k.upcase, v)
   end
+  ELLIPSIS = "\u2026"
   RETURN = "#{YELLOW}return#{CLEAR}"
 
   def strip_colour(text)
@@ -127,6 +128,44 @@ class TestTraceWrapper < Minitest::Test
       result = PlayFib.new.fib(4)
 
       assert_equal(5, result)
+    end
+
+    assert_equal_output(strip_colour(expected_output), colour: false, &subject)
+    assert_equal_output(expected_output, colour: true, &subject)
+  end
+
+  def test_wrap_args
+    mod_name = "#{GREEN}PlayArgs#{CLEAR}"
+    methods_pattern = /\b(full(?:_rest)?|(?:key_|both_)?rest)\b/
+
+    expected_output = <<-OUTPUT.gsub(/^ {4}/, '')
+      MOD.full(@3@, @4@, a: @5@)
+      MOD.full RETURN @[3, 4, 5]@
+      MOD.full_rest(@5@, @6@, @7@, a: @1@, b: @2@)
+      MOD.full_rest RETURN @[[5, 6, 7], {:a=>1, #{ELLIPSIS}]@
+      MOD.rest(@42@, @"b"@)
+      MOD.rest RETURN @[42, "b"]@
+      MOD.key_rest(a: @"a"@, b: @nil@)
+      MOD.key_rest RETURN @{:a=>"a", :b=>nil}@
+      MOD.both_rest(@12@, @"d"@, a: @nil@, b: @9@)
+      MOD.both_rest RETURN @[[12, "d"], {:a=>nil#{ELLIPSIS}]@
+    OUTPUT
+    expected_output.gsub!('MOD', mod_name)
+                   .gsub!('RETURN', RETURN)
+                   .gsub!(methods_pattern, "#{BLUE}\\1#{CLEAR}")
+                   .gsub!(/@([^@]*)@/, "#{PURPLE}\\1#{CLEAR}")
+
+    subject = lambda do |tracer|
+      tracer.wrap(PlayArgs)
+      assert_equal([3, 4, 5], PlayArgs.full(3, 4, a: 5))
+      assert_equal([[5, 6, 7], { a: 1, b: 2 }],
+                   PlayArgs.full_rest(5, 6, 7, a: 1, b: 2) do |*args, **kwargs|
+                     [args, kwargs]
+                   end)
+      assert_equal([42, 'b'], PlayArgs.rest(42, 'b'))
+      assert_equal({ a: 'a', b: nil }, PlayArgs.key_rest(a: 'a', b: nil))
+      assert_equal([[12, 'd'], { a: nil, b: 9 }],
+                   PlayArgs.both_rest(12, 'd', a: nil, b: 9))
     end
 
     assert_equal_output(strip_colour(expected_output), colour: false, &subject)
