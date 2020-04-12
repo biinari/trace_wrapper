@@ -1,0 +1,73 @@
+AllCops:
+  TargetRubyVersion: 2.3
+
+Layout/EmptyLineAfterGuardClause:
+  Enabled: false
+
+Layout/LineLength:
+  Exclude:
+    - '**/Gemfile'
+    - '**/*.gemspec'
+  IgnoredPatterns:
+    - '^.{,89}$'
+    - '[\w:]{50}'
+    - '^\s*\b(background|context|it|describe|scenario|pending|skip|(include|shared)_(examples|context)|it_behaves_like)\b.*(do|\{)?$'
+
+Metrics/AbcSize:
+  Max: 30
+  Severity: refactor
+
+Metrics/BlockLength:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/ParameterLists:
+  Max: 6
+
+Naming/MethodParameterName:
+  AllowedNames:
+    - a
+    - b
+    - m
+    - n
+    - x
+    - y
+    - io
+    - id
+    - to
+    - by
+    - 'on'
+    - in
+    - at
+    - ip
+    - db
+    - os
+    - pp
+
+Style/Documentation:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Exclude:
+    - '**/Gemfile'
+    - '**/*.gemspec'
+
+Style/HashEachMethods:
+  Enabled: false
+
+Style/HashTransformKeys:
+  Enabled: false
+
+Style/HashTransformValues:
+  Enabled: false
+
+Style/RescueModifier:
+  Enabled: false
+
+Style/TrailingUnderscoreVariable:
+  Enabled: false
