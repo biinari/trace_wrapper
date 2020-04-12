@@ -1,5 +1,7 @@
 # TraceWrapper method call / return tracing
 
+[![Build Status](https://travis-ci.org/biinari/trace_wrapper.svg?branch=master)](https://travis-ci.org/biinari/trace_wrapper)
+
 TraceWrapper outputs method call and return info for a class or module
 
 ## Installation
