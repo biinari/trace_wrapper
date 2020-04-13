@@ -4,13 +4,18 @@
 # Wraps methods on given classes or modules to output a call/return tree.
 class TraceWrapper
   COLOURS = {
-    clear: "\e[0m",
-    red: "\e[1;31m",
-    green: "\e[1;32m",
-    orange: "\e[33m",
-    blue: "\e[36m",
-    purple: "\e[35m",
-    yellow: "\e[1;33m"
+    red: '31m',
+    b_red: '1;31m',
+    green: '32m',
+    b_green: '1;32m',
+    orange: '33m',
+    yellow: '1;33m',
+    blue: '34m',
+    b_blue: '1;34m',
+    purple: '35m',
+    b_purple: '1;35m',
+    teal: '36m',
+    cyan: '1;36m'
   }.freeze
 
   ELLIPSIS = "\u2026"
@@ -36,8 +41,9 @@ class TraceWrapper
   def initialize(output: $stdout, colour: nil)
     @output = output
     @colour = colour
-    @level = 0
     @unwrappers = []
+    @pid = Process.pid
+    @processes = {}
   end
 
   ##
@@ -142,13 +148,14 @@ class TraceWrapper
   end
 
   def trace_call(receiver, dot, method_name, *args, **kwargs)
-    writeln("#{function(receiver, dot, method_name)}(#{show_args(*args, **kwargs)})")
-    @level += 1
+    writeln("#{show_pid}#{function(receiver, dot, method_name)}" \
+            "(#{show_args(*args, **kwargs)})")
+    incr_indent
   end
 
   def trace_return(receiver, dot, method_name, result)
-    @level = [@level - 1, 0].max
-    writeln("#{function(receiver, dot, method_name)} " \
+    decr_indent
+    writeln("#{show_pid}#{function(receiver, dot, method_name)} " \
             "#{colour('return', :yellow)} " \
             "#{colour(short_inspect(result), :purple)}")
   end
@@ -162,18 +169,18 @@ class TraceWrapper
   end
 
   def function(receiver, dot, name)
-    return colour(id, :blue) if main == receiver
+    return colour(id, :teal) if main == receiver
 
-    "#{colour(receiver, :green)}#{dot}#{colour(name, :blue)}"
+    "#{colour(receiver, :b_green)}#{dot}#{colour(name, :teal)}"
   end
 
   def writeln(text)
     @output.write("#{indent}#{text}\n")
   end
 
-  def colour(text, colour = :green)
+  def colour(text, colour)
     return text unless colour?
-    "#{COLOURS[colour]}#{text}#{COLOURS[:clear]}"
+    "\e[#{COLOURS[colour]}#{text}\e[0m"
   end
 
   def colour?
@@ -181,8 +188,32 @@ class TraceWrapper
     @output.respond_to?(:isatty) && @output.isatty
   end
 
+  def incr_indent
+    process[:indent] += 1
+  end
+
+  def decr_indent
+    process[:indent] = [process[:indent] - 1, 0].max
+  end
+
   def indent
-    '  ' * (@level + 1)
+    '  ' * (process[:indent] + 1)
+  end
+
+  def process
+    proc_colours = %i[orange blue red purple cyan yellow b_blue b_red b_purple]
+    @processes[pid] ||= {
+      colour: proc_colours[@processes.size],
+      indent: 0
+    }
+  end
+
+  def pid
+    Process.pid
+  end
+
+  def show_pid
+    colour("[#{pid}]", COLOURS.keys[pid.hash % COLOURS.size]) if pid != @pid
   end
 
   def show_args(*args, **kwargs)
