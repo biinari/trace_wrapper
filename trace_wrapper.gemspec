@@ -1,3 +1,5 @@
+require 'English'
+
 Gem::Specification.new do |s|
   s.name = 'trace_wrapper'
   s.version = '0.0.1'
@@ -8,7 +10,11 @@ Gem::Specification.new do |s|
   See a tree of calls made to wrapped methods with argument values and return
   values.'
   s.authors = ['Bill Ruddock']
-  s.files = ['lib/trace_wrapper.rb']
+
+  s.files = `git ls-files`.split($INPUT_RECORD_SEPARATOR)
+  s.test_files = s.files.grep(%r{test/})
+  s.require_paths = ['lib']
+
   s.homepage = 'https://github.com/biinari/trace_wrapper'
   s.metadata = {
     'source_code_uri' => 'https://github.com/biinari/trace_wrapper'
