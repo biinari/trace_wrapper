@@ -13,6 +13,7 @@ Gem::Specification.new do |s|
   s.metadata = {
     'source_code_uri' => 'https://github.com/biinari/trace_wrapper'
   }
+  s.rdoc_options << '--main' << 'README.md'
 
   s.add_development_dependency 'minitest', '~> 5.14'
   s.add_development_dependency 'rake', '~> 13.0'
