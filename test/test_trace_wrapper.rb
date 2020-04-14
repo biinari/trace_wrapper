@@ -172,4 +172,31 @@ class TestTraceWrapper < Minitest::Test
     assert_equal_output(strip_colour(expected_output), colour: false, &subject)
     assert_equal_output(expected_output, colour: true, &subject)
   end
+
+  def test_trace_process_label
+    expected_output = <<-OUTPUT.gsub(/^ {4}/, '')
+      MOD.ONE(@"a"@)
+      MOD.ONE RETURN @"a and a one"@
+      #{ORANGE}[:THREAD_ID]#{CLEAR}MOD.ONE(@2@)
+      #{ORANGE}[:THREAD_ID]#{CLEAR}MOD.ONE RETURN @"2 and a one"@
+    OUTPUT
+    expected_output.gsub!('MOD', "#{B_GREEN}PlayModule#{CLEAR}")
+                   .gsub!('ONE', "#{TEAL}one#{CLEAR}")
+                   .gsub!('RETURN', "#{YELLOW}return#{CLEAR}")
+                   .gsub!(/@([^@]*)@/, "#{PURPLE}\\1#{CLEAR}")
+
+    [true, false].each do |colour|
+      output = Output.new
+      tracer = TraceWrapper.new(output: output, colour: colour)
+      thread = nil
+      tracer.wrap(PlayModule) do
+        assert_equal('a and a one', PlayModule.one('a'))
+        thread = Thread.new { PlayModule.one(2) }
+        thread.join
+      end
+      exp = expected_output.gsub('THREAD_ID', thread.hash.to_s[-4..-1])
+      exp = strip_colour(exp) unless colour
+      assert_equal(exp, output.output.join)
+    end
+  end
 end

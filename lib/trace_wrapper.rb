@@ -42,7 +42,7 @@ class TraceWrapper
     @output = output
     @colour = colour
     @unwrappers = []
-    @pid = Process.pid
+    @process_id = process_id
     @processes = {}
   end
 
@@ -201,19 +201,27 @@ class TraceWrapper
   end
 
   def process
-    proc_colours = %i[orange blue red purple cyan yellow b_blue b_red b_purple]
-    @processes[pid] ||= {
+    proc_colours = %i[b_purple orange blue red purple cyan yellow b_blue b_red]
+    @processes[process_id.join(':')] ||= {
       colour: proc_colours[@processes.size],
       indent: 0
     }
   end
 
-  def pid
-    Process.pid
+  def process_id
+    [Process.pid, Thread.current.hash]
+  end
+
+  def process_label
+    return if process_id == @process_id
+    pid, tid = process_id
+    return pid if Thread.current == Thread.main
+    pid = '' if pid == @process_id.first
+    "#{pid}:#{tid.to_s[-4..-1]}"
   end
 
   def show_pid
-    colour("[#{pid}]", COLOURS.keys[pid.hash % COLOURS.size]) if pid != @pid
+    colour("[#{process_label}]", process[:colour]) if process_id != @process_id
   end
 
   def show_args(*args, **kwargs)
