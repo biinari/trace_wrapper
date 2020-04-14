@@ -22,6 +22,22 @@ class TestTraceWrapper < Minitest::Test
     end
   end
 
+  class Pipe
+    attr_reader :reader, :writer
+
+    def initialize
+      @reader, @writer = IO.pipe
+    end
+
+    def write(*args)
+      @writer.write(*args)
+    end
+
+    def read(*args)
+      @reader.read(*args)
+    end
+  end
+
   ::TraceWrapper::COLOURS.each do |k, v|
     const_set(k.upcase, "\e[#{v}")
   end
@@ -173,7 +189,7 @@ class TestTraceWrapper < Minitest::Test
     assert_equal_output(expected_output, colour: true, &subject)
   end
 
-  def test_trace_process_label
+  def test_trace_process_label_thread
     expected_output = <<-OUTPUT.gsub(/^ {4}/, '')
       MOD.ONE(@"a"@)
       MOD.ONE RETURN @"a and a one"@
@@ -185,7 +201,7 @@ class TestTraceWrapper < Minitest::Test
                    .gsub!('RETURN', "#{YELLOW}return#{CLEAR}")
                    .gsub!(/@([^@]*)@/, "#{PURPLE}\\1#{CLEAR}")
 
-    [true, false].each do |colour|
+    [false, true].each do |colour|
       output = Output.new
       tracer = TraceWrapper.new(output: output, colour: colour)
       thread = nil
@@ -197,6 +213,45 @@ class TestTraceWrapper < Minitest::Test
       exp = expected_output.gsub('THREAD_ID', thread.hash.to_s[-4..-1])
       exp = strip_colour(exp) unless colour
       assert_equal(exp, output.output.join)
+    end
+  end
+
+  def test_trace_process_label_fork
+    expected_output = <<-OUTPUT.gsub(/^ {4}/, '')
+      #{ORANGE}[PROCESS_ID]#{CLEAR}MOD.ONE(@3@)
+      #{ORANGE}[PROCESS_ID]#{CLEAR}MOD.ONE RETURN @"3 and a one"@
+      #{BLUE}[PROCESS_ID:THREAD_ID]#{CLEAR}MOD.ONE(@4@)
+      #{BLUE}[PROCESS_ID:THREAD_ID]#{CLEAR}MOD.ONE RETURN @"4 and a one"@
+    OUTPUT
+    expected_output.gsub!('MOD', "#{B_GREEN}PlayModule#{CLEAR}")
+                   .gsub!('ONE', "#{TEAL}one#{CLEAR}")
+                   .gsub!('RETURN', "#{YELLOW}return#{CLEAR}")
+                   .gsub!(/@([^@]*)@/, "#{PURPLE}\\1#{CLEAR}")
+
+    [false, true].each do |colour|
+      pipe = Pipe.new
+      thread_pipe = Pipe.new
+
+      tracer = TraceWrapper.new(output: pipe, colour: colour)
+      pid = nil
+      tracer.wrap(PlayModule) do
+        pid = Process.fork do
+          PlayModule.one(3)
+          thread = Thread.new { PlayModule.one(4) }
+          thread.join
+          thread_pipe.write(thread.hash.to_s[-4..-1])
+
+          pipe.writer.close
+          thread_pipe.writer.close
+        end
+        pipe.writer.close
+        thread_pipe.writer.close
+        Process.wait(pid)
+      end
+      exp = expected_output.gsub('PROCESS_ID', pid.to_s)
+                           .gsub('THREAD_ID', thread_pipe.read)
+      exp = strip_colour(exp) unless colour
+      assert_equal(exp, pipe.read)
     end
   end
 end
