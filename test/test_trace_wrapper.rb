@@ -23,8 +23,9 @@ class TestTraceWrapper < Minitest::Test
   end
 
   ::TraceWrapper::COLOURS.each do |k, v|
-    const_set(k.upcase, v)
+    const_set(k.upcase, "\e[#{v}")
   end
+  CLEAR = "\e[0m"
   ELLIPSIS = "\u2026"
   RETURN = "#{YELLOW}return#{CLEAR}"
 
@@ -44,7 +45,7 @@ class TestTraceWrapper < Minitest::Test
   end
 
   def test_wrap_output_module
-    mod_name = "#{GREEN}PlayModule#{CLEAR}"
+    mod_name = "#{B_GREEN}PlayModule#{CLEAR}"
 
     expected_output = <<-OUTPUT.gsub(/^ {4}/, '')
       MOD.TWO()
@@ -54,8 +55,8 @@ class TestTraceWrapper < Minitest::Test
     OUTPUT
     expected_output.gsub!('MOD', mod_name)
                    .gsub!('RETURN', RETURN)
-                   .gsub!('ONE', "#{BLUE}one#{CLEAR}")
-                   .gsub!('TWO', "#{BLUE}two#{CLEAR}")
+                   .gsub!('ONE', "#{TEAL}one#{CLEAR}")
+                   .gsub!('TWO', "#{TEAL}two#{CLEAR}")
 
     subject = lambda do |tracer|
       tracer.wrap(PlayModule, method_type: :methods)
@@ -71,7 +72,7 @@ class TestTraceWrapper < Minitest::Test
   end
 
   def test_wrap_output_class
-    cls_name = "#{GREEN}PlayClass#{CLEAR}"
+    cls_name = "#{B_GREEN}PlayClass#{CLEAR}"
 
     expected_output = <<-OUTPUT.gsub(/^ {4}/, '')
       CLASS.PLAY_HELLO()
@@ -81,8 +82,8 @@ class TestTraceWrapper < Minitest::Test
     OUTPUT
     expected_output.gsub!('CLASS', cls_name)
                    .gsub!('RETURN', RETURN)
-                   .gsub!('PLAY_HELLO', "#{BLUE}play_hello#{CLEAR}")
-                   .gsub!('PLAY', "#{BLUE}play#{CLEAR}")
+                   .gsub!('PLAY_HELLO', "#{TEAL}play_hello#{CLEAR}")
+                   .gsub!('PLAY', "#{TEAL}play#{CLEAR}")
 
     subject = lambda do |tracer|
       tracer.wrap(PlayClass)
@@ -96,8 +97,8 @@ class TestTraceWrapper < Minitest::Test
   end
 
   def test_wrap_output_class_nesting
-    cls_name = "#{GREEN}PlayFib#{CLEAR}"
-    fib = "#{BLUE}fib#{CLEAR}"
+    cls_name = "#{B_GREEN}PlayFib#{CLEAR}"
+    fib = "#{TEAL}fib#{CLEAR}"
 
     expected_output = <<-OUTPUT.gsub(/^ {4}/, '')
       SIG(ARG(4))
@@ -135,7 +136,7 @@ class TestTraceWrapper < Minitest::Test
   end
 
   def test_wrap_args
-    mod_name = "#{GREEN}PlayArgs#{CLEAR}"
+    mod_name = "#{B_GREEN}PlayArgs#{CLEAR}"
     methods_pattern = /\b(full(?:_rest)?|(?:key_|both_)?rest)\b/
 
     expected_output = <<-OUTPUT.gsub(/^ {4}/, '')
@@ -152,7 +153,7 @@ class TestTraceWrapper < Minitest::Test
     OUTPUT
     expected_output.gsub!('MOD', mod_name)
                    .gsub!('RETURN', RETURN)
-                   .gsub!(methods_pattern, "#{BLUE}\\1#{CLEAR}")
+                   .gsub!(methods_pattern, "#{TEAL}\\1#{CLEAR}")
                    .gsub!(/@([^@]*)@/, "#{PURPLE}\\1#{CLEAR}")
 
     subject = lambda do |tracer|
