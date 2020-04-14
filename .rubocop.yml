@@ -16,6 +16,8 @@ Layout/LineLength:
 Metrics/AbcSize:
   Max: 30
   Severity: refactor
+  Exclude:
+    - '**/test/test_*.rb'
 
 Metrics/BlockLength:
   Enabled: false
