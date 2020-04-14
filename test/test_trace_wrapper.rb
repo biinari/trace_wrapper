@@ -23,8 +23,6 @@ class TestTraceWrapper < Minitest::Test
   end
 
   class Pipe
-    attr_reader :reader, :writer
-
     def initialize
       @reader, @writer = IO.pipe
     end
@@ -35,6 +33,10 @@ class TestTraceWrapper < Minitest::Test
 
     def read(*args)
       @reader.read(*args)
+    end
+
+    def close
+      @writer.close
     end
   end
 
@@ -241,11 +243,11 @@ class TestTraceWrapper < Minitest::Test
           thread.join
           thread_pipe.write(thread.hash.to_s[-4..-1])
 
-          pipe.writer.close
-          thread_pipe.writer.close
+          pipe.close
+          thread_pipe.close
         end
-        pipe.writer.close
-        thread_pipe.writer.close
+        pipe.close
+        thread_pipe.close
         Process.wait(pid)
       end
       exp = expected_output.gsub('PROCESS_ID', pid.to_s)
