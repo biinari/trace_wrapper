@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2020-04-17
+
 ### Changed
 - [BREAKING CHANGE] `:visibility` option to `wrap()` changed to just indicate the lowest visibility level wanted [commit](https://github.com/biinari/trace_wrapper/commit/84024964d846ed522192d4c1f0a8ecbb8f516323)
 - Moved shell colour internals to separate, undocumented module. [commit](https://github.com/biinari/trace_wrapper/7d4a9cb04314e252c4bfd184ce815b300d1f7852)
@@ -35,5 +37,6 @@ Initial public release
 
 [Initial commit](https://github.com/biinari/tree/f71416e97ce3b7c1e76d0d6722ea64eb4d2a01ff)
 
-[Unreleased]: https://github.com/biinari/trace_wrapper/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/biinari/trace_wrapper/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/biinari/trace_wrapper/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/biinari/trace_wrapper/releases/tag/v0.1.0
