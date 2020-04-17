@@ -56,6 +56,8 @@ class TraceWrapper
   # the block's result will be returned.
   # The TraceWrapper instance will be yielded to the block to allow further
   # wraps to be added.
+  #
+  # If no block is given, you should call unwrap after use.
   def wrap(*receivers,
            method_type: :all,
            visibility: :protected) # :yields: a_trace_wrapper
