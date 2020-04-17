@@ -1,8 +1,10 @@
 require 'English'
 
+require File.expand_path('lib/trace_wrapper/version', __dir__)
+
 Gem::Specification.new do |s|
   s.name = 'trace_wrapper'
-  s.version = '0.0.1'
+  s.version = TraceWrapper::VERSION
   s.licenses = ['Hippocratic 2.1']
   s.summary = 'TraceWrapper outputs method call and returns for a class'
   s.description = 'Wrap the methods of a class or module to output call info.
