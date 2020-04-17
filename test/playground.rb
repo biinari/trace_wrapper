@@ -22,6 +22,26 @@ class PlayClass
   def play(*args)
     args.map(&:to_s).join(', ')
   end
+
+  def play_friendly(*args)
+    friendly(*args)
+  end
+
+  def play_solitaire(*args)
+    solitaire(*args)
+  end
+
+  protected
+
+  def friendly(*args)
+    "friends: #{args.map(&:to_s).join(', ')}"
+  end
+
+  private
+
+  def solitaire(*args)
+    "solo: #{args.map(&:to_s).join(', ')}"
+  end
 end
 
 module PlayArgs
