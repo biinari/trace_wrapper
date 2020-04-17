@@ -12,11 +12,13 @@ class TraceWrapper
     ##
     # Wraps methods on given +receivers+ with tracing
     #
-    # See #wrap for full details of options
-    def wrap(*receivers, **kwargs, &block) # :yields: a_trace_wrapper
+    # options will be passed to .new and #wrap respectively
+    #
+    # If a block is given, it will be passed to #wrap
+    def wrap(*receivers, **options, &block) # :yields: a_trace_wrapper
       init_keys = %i[output colour]
-      init_args = kwargs.select { |k, _| init_keys.include?(k) }
-      wrap_args = kwargs.reject { |k, _| init_keys.include?(k) }
+      init_args = options.select { |k, _| init_keys.include?(k) }
+      wrap_args = options.reject { |k, _| init_keys.include?(k) }
 
       new(**init_args).wrap(*receivers, **wrap_args, &block)
     end
