@@ -25,7 +25,7 @@ class TraceWrapper
   #
   # :output - +IO+ object to write trace output to (default +STDOUT+)
   # :colour - True to use shell colours in output (default +nil+ will colour if
-  #           output is a TTY)
+  # output is a TTY)
   def initialize(output: $stdout, colour: nil)
     @output = output
     @colour = colour
@@ -152,7 +152,7 @@ class TraceWrapper
       protected: :protected_methods,
       private: :private_methods
     }
-  }.freeze
+  }.freeze # :nodoc:
 
   def get_methods(receiver, method_type, visibility)
     %i[public protected private].map do |vis|
