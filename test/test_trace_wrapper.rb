@@ -77,7 +77,7 @@ class TestTraceWrapper < Minitest::Test
                    .gsub!('TWO', "#{TEAL}two#{CLEAR}")
 
     subject = lambda do |tracer|
-      tracer.wrap(PlayModule, method_type: :methods)
+      tracer.wrap(PlayModule, method_type: :self)
       result = PlayModule.two do
         PlayModule.one('abc')
       end
@@ -114,6 +114,58 @@ class TestTraceWrapper < Minitest::Test
     assert_equal_output(expected_output, colour: true, &subject)
   end
 
+  def test_wrap_output_protected_methods
+    cls_name = "#{B_GREEN}PlayClass#{CLEAR}"
+
+    expected_output = <<-OUTPUT.gsub(/^ {4}/, '')
+      CLASS#PLAY_FRIENDLY(@1@)
+        CLASS#FRIENDLY(@1@)
+        CLASS#FRIENDLY RETURN @"friends: 1"@
+      CLASS#PLAY_FRIENDLY RETURN @"friends: 1"@
+    OUTPUT
+    expected_output.gsub!('CLASS', cls_name)
+                   .gsub!('RETURN', RETURN)
+                   .gsub!('PLAY_FRIENDLY', "#{TEAL}play_friendly#{CLEAR}")
+                   .gsub!('FRIENDLY', "#{TEAL}friendly#{CLEAR}")
+                   .gsub!(/@([^@]*)@/, "#{PURPLE}\\1#{CLEAR}")
+
+    subject = lambda do |tracer|
+      tracer.wrap(PlayClass)
+      result = PlayClass.new.play_friendly(1)
+
+      assert_equal('friends: 1', result)
+    end
+
+    assert_equal_output(strip_colour(expected_output), colour: false, &subject)
+    assert_equal_output(expected_output, colour: true, &subject)
+  end
+
+  def test_wrap_output_private_methods
+    cls_name = "#{B_GREEN}PlayClass#{CLEAR}"
+
+    expected_output = <<-OUTPUT.gsub(/^ {4}/, '')
+      CLASS#PLAY_SOLITAIRE(@2@, @3@)
+        CLASS#SOLITAIRE(@2@, @3@)
+        CLASS#SOLITAIRE RETURN @"solo: 2, 3"@
+      CLASS#PLAY_SOLITAIRE RETURN @"solo: 2, 3"@
+    OUTPUT
+    expected_output.gsub!('CLASS', cls_name)
+                   .gsub!('RETURN', RETURN)
+                   .gsub!('PLAY_SOLITAIRE', "#{TEAL}play_solitaire#{CLEAR}")
+                   .gsub!('SOLITAIRE', "#{TEAL}solitaire#{CLEAR}")
+                   .gsub!(/@([^@]*)@/, "#{PURPLE}\\1#{CLEAR}")
+
+    subject = lambda do |tracer|
+      tracer.wrap(PlayClass, visibility: %i[public protected private])
+      result = PlayClass.new.play_solitaire(2, 3)
+
+      assert_equal('solo: 2, 3', result)
+    end
+
+    assert_equal_output(strip_colour(expected_output), colour: false, &subject)
+    assert_equal_output(expected_output, colour: true, &subject)
+  end
+
   def test_wrap_output_class_nesting
     cls_name = "#{B_GREEN}PlayFib#{CLEAR}"
     fib = "#{TEAL}fib#{CLEAR}"
@@ -143,7 +195,7 @@ class TestTraceWrapper < Minitest::Test
                    .gsub!(/ARG\((\d+)\)/, "#{PURPLE}\\1#{CLEAR}")
 
     subject = lambda do |tracer|
-      tracer.wrap(PlayFib, method_type: :instance_methods)
+      tracer.wrap(PlayFib, method_type: :instance)
       result = PlayFib.new.fib(4)
 
       assert_equal(5, result)

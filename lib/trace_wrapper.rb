@@ -53,19 +53,24 @@ class TraceWrapper
   # Options
   #
   # :method_type - Types of methods to wrap (default: :all). Choices are:
-  #                :instance_methods for methods on instances of receiver(s)
-  #                :methods for methods called directly on the receiver(s)
+  #                :instance for methods on instances of receiver(s)
+  #                :self for methods called directly on the receiver(s)
   #                :all for both
+  # :visibility - Array of method visibility levels to wrap. Can include
+  #               :public, :protected, :private
+  #               (default [:public, :protected])
   #
   # If a block is given, the wrappers will be created just around the block
-  def wrap(*receivers, method_type: :all)
+  def wrap(*receivers,
+           method_type: :all,
+           visibility: %i[public protected])
     unwrappers = []
-    [*receivers].each do |receiver|
-      if %i[all methods].include?(method_type)
-        unwrappers += wrap_methods(receiver)
+    Array(*receivers).each do |receiver|
+      if %i[all self].include?(method_type)
+        unwrappers += wrap_methods(receiver, visibility: visibility)
       end
-      if %i[all instance_methods].include?(method_type)
-        unwrappers += wrap_instance_methods(receiver)
+      if %i[all instance].include?(method_type)
+        unwrappers += wrap_instance_methods(receiver, visibility: visibility)
       end
     end
     if block_given?
@@ -89,10 +94,10 @@ class TraceWrapper
   private
 
   # Wrap standard methods (methods on the object given) with tracing
-  def wrap_methods(*receivers)
+  def wrap_methods(*receivers, visibility: %i[public protected])
     unwrappers = []
-    [*receivers].each do |receiver|
-      mod, unwrapper = wrapping_module(receiver, :methods)
+    Array(*receivers).each do |receiver|
+      mod, unwrapper = wrapping_module(receiver, :self, visibility)
       unwrappers << unwrapper
       receiver.singleton_class.send(:prepend, mod)
     end
@@ -101,20 +106,20 @@ class TraceWrapper
 
   # Wrap instance methods (called on an instance of the class given) with
   # tracing
-  def wrap_instance_methods(*receivers)
+  def wrap_instance_methods(*receivers, visibility: %i[public protected])
     unwrappers = []
-    [*receivers].each do |receiver|
-      mod, unwrapper = wrapping_module(receiver, :instance_methods)
+    Array(*receivers).each do |receiver|
+      mod, unwrapper = wrapping_module(receiver, :instance, visibility)
       unwrappers << unwrapper
       receiver.send(:prepend, mod)
     end
     unwrappers
   end
 
-  def wrapping_module(receiver, methods_type)
-    method_names = receiver.public_send(methods_type) - Object.methods
-    get_method = methods_type == :methods ? :method : :instance_method
-    dot = methods_type == :methods ? '.' : '#'
+  def wrapping_module(receiver, method_type, visibility)
+    method_names = get_methods(receiver, method_type, visibility)
+    get_method = method_type == :instance ? :instance_method : :method
+    dot = method_type == :instance ? '#' : '.'
     trace_call = method(:trace_call)
     trace_return = method(:trace_return)
     key_args = method(:key_args?)
@@ -146,6 +151,28 @@ class TraceWrapper
       end
     end
     [mod, unwrapper]
+  end
+
+  LIST_METHODS = {
+    instance: {
+      public: :public_instance_methods,
+      protected: :protected_instance_methods,
+      private: :private_instance_methods
+    },
+    self: {
+      public: :public_methods,
+      protected: :protected_methods,
+      private: :private_methods
+    }
+  }.freeze
+
+  def get_methods(receiver, method_type, visibility)
+    %i[public protected private].map do |vis|
+      next unless visibility.include?(vis)
+
+      lister = LIST_METHODS[method_type][vis]
+      receiver.public_send(lister, false) - Object.public_send(lister)
+    end.compact.flatten
   end
 
   def trace_call(receiver, dot, method_name, *args, **kwargs)
