@@ -219,6 +219,8 @@ class TestTraceWrapper < Minitest::Test
   end
 
   def test_trace_process_label_fork
+    skip 'Process.fork unavailable' unless Process.respond_to?(:fork)
+
     expected_output = <<-OUTPUT.gsub(/^ {4}/, '')
       #{ORANGE}[PROCESS_ID]#{CLEAR}MOD.ONE(@3@)
       #{ORANGE}[PROCESS_ID]#{CLEAR}MOD.ONE RETURN @"3 and a one"@
