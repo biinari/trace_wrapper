@@ -13,7 +13,7 @@ class TraceWrapper
     # Wraps methods on given +receivers+ with tracing
     #
     # See #wrap for full details of options
-    def wrap(*receivers, **kwargs, &block)
+    def wrap(*receivers, **kwargs, &block) # :yields: a_trace_wrapper
       init_keys = %i[output colour]
       init_args = kwargs.select { |k, _| init_keys.include?(k) }
       wrap_args = kwargs.reject { |k, _| init_keys.include?(k) }
@@ -55,7 +55,9 @@ class TraceWrapper
   # If a block is given, the wrappers will be created just around the block.
   # The TraceWrapper instance will be yielded to the block to allow further
   # wraps to be added.
-  def wrap(*receivers, method_type: :all, visibility: :protected)
+  def wrap(*receivers,
+           method_type: :all,
+           visibility: :protected) # :yields: a_trace_wrapper
     unwrappers = []
     Array(*receivers).each do |receiver|
       if %i[all self].include?(method_type)
