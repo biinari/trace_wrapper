@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'trace_wrapper/version'
+
 ##
 # Wraps methods on given classes or modules to output a call/return tree.
 class TraceWrapper
