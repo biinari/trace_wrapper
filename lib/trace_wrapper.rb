@@ -52,7 +52,8 @@ class TraceWrapper
   # +:visibility+ - Lowest method visibility level to wrap
   # (default: +:protected+). Choices are: :public, :protected, :private.
   #
-  # If a block is given, the wrappers will be created just around the block.
+  # If a block is given, the wrappers will be created just around the block and
+  # the block's result will be returned.
   # The TraceWrapper instance will be yielded to the block to allow further
   # wraps to be added.
   def wrap(*receivers,
