@@ -1,26 +1,12 @@
 # frozen_string_literal: true
 
 require 'trace_wrapper/version'
+require 'trace_wrapper/shell'
 
 ##
 # Wraps methods on given classes or modules to output a call/return tree.
 class TraceWrapper
-  COLOURS = {
-    red: '31m',
-    b_red: '1;31m',
-    green: '32m',
-    b_green: '1;32m',
-    orange: '33m',
-    yellow: '1;33m',
-    blue: '34m',
-    b_blue: '1;34m',
-    purple: '35m',
-    b_purple: '1;35m',
-    teal: '36m',
-    cyan: '1;36m'
-  }.freeze
-
-  ELLIPSIS = "\u2026"
+  include TraceWrapper::Shell
 
   class << self
     def wrap(*receivers, **kwargs, &block)
@@ -206,16 +192,6 @@ class TraceWrapper
 
   def writeln(text)
     @output.write("#{indent}#{text}\n")
-  end
-
-  def colour(text, colour)
-    return text unless colour?
-    "\e[#{COLOURS[colour]}#{text}\e[0m"
-  end
-
-  def colour?
-    return @colour unless @colour.nil?
-    @output.respond_to?(:isatty) && @output.isatty
   end
 
   def incr_indent
