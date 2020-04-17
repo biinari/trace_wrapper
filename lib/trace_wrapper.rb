@@ -9,6 +9,10 @@ class TraceWrapper
   include TraceWrapper::Shell
 
   class << self
+    ##
+    # Wraps methods on given +receivers+ with tracing
+    #
+    # See #wrap for full details of options
     def wrap(*receivers, **kwargs, &block)
       init_keys = %i[output colour]
       init_args = kwargs.select { |k, _| init_keys.include?(k) }
@@ -40,14 +44,17 @@ class TraceWrapper
   #
   # Options
   #
-  # :method_type - Types of methods to wrap (default: :all). Choices are:
-  #                :instance for methods on instances of receiver(s)
-  #                :self for methods called directly on the receiver(s)
-  #                :all for both
-  # :visibility - Lowest method visibility level to wrap. Choices are: :public,
-  # :protected, :private. Default is :protected.
+  # +:method_type+ - Types of methods to wrap (default: +:all+). Choices are:
+  # +:instance+ (for instance methods),
+  # +:self+ (for receiver methods, i.e. class/module functions),
+  # +:all+ for both
   #
-  # If a block is given, the wrappers will be created just around the block
+  # +:visibility+ - Lowest method visibility level to wrap
+  # (default: +:protected+). Choices are: :public, :protected, :private.
+  #
+  # If a block is given, the wrappers will be created just around the block.
+  # The TraceWrapper instance will be yielded to the block to allow further
+  # wraps to be added.
   def wrap(*receivers, method_type: :all, visibility: :protected)
     unwrappers = []
     Array(*receivers).each do |receiver|
