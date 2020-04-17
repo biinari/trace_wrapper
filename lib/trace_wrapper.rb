@@ -65,7 +65,7 @@ class TraceWrapper
            method_type: :all,
            visibility: %i[public protected])
     unwrappers = []
-    [*receivers].each do |receiver|
+    Array(*receivers).each do |receiver|
       if %i[all self].include?(method_type)
         unwrappers += wrap_methods(receiver, visibility: visibility)
       end
@@ -96,7 +96,7 @@ class TraceWrapper
   # Wrap standard methods (methods on the object given) with tracing
   def wrap_methods(*receivers, visibility: %i[public protected])
     unwrappers = []
-    [*receivers].each do |receiver|
+    Array(*receivers).each do |receiver|
       mod, unwrapper = wrapping_module(receiver, :self, visibility)
       unwrappers << unwrapper
       receiver.singleton_class.send(:prepend, mod)
@@ -108,7 +108,7 @@ class TraceWrapper
   # tracing
   def wrap_instance_methods(*receivers, visibility: %i[public protected])
     unwrappers = []
-    [*receivers].each do |receiver|
+    Array(*receivers).each do |receiver|
       mod, unwrapper = wrapping_module(receiver, :instance, visibility)
       unwrappers << unwrapper
       receiver.send(:prepend, mod)
