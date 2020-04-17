@@ -44,14 +44,11 @@ class TraceWrapper
   #                :instance for methods on instances of receiver(s)
   #                :self for methods called directly on the receiver(s)
   #                :all for both
-  # :visibility - Array of method visibility levels to wrap. Can include
-  #               :public, :protected, :private
-  #               (default [:public, :protected])
+  # :visibility - Lowest method visibility level to wrap. Choices are: :public,
+  # :protected, :private. Default is :protected.
   #
   # If a block is given, the wrappers will be created just around the block
-  def wrap(*receivers,
-           method_type: :all,
-           visibility: %i[public protected])
+  def wrap(*receivers, method_type: :all, visibility: :protected)
     unwrappers = []
     Array(*receivers).each do |receiver|
       if %i[all self].include?(method_type)
@@ -82,7 +79,7 @@ class TraceWrapper
   private
 
   # Wrap standard methods (methods on the object given) with tracing
-  def wrap_methods(*receivers, visibility: %i[public protected])
+  def wrap_methods(*receivers, visibility: :protected)
     unwrappers = []
     Array(*receivers).each do |receiver|
       mod, unwrapper = wrapping_module(receiver, :self, visibility)
@@ -94,7 +91,7 @@ class TraceWrapper
 
   # Wrap instance methods (called on an instance of the class given) with
   # tracing
-  def wrap_instance_methods(*receivers, visibility: %i[public protected])
+  def wrap_instance_methods(*receivers, visibility: :protected)
     unwrappers = []
     Array(*receivers).each do |receiver|
       mod, unwrapper = wrapping_module(receiver, :instance, visibility)
@@ -155,9 +152,13 @@ class TraceWrapper
   }.freeze # :nodoc:
 
   def get_methods(receiver, method_type, visibility)
-    %i[public protected private].map do |vis|
-      next unless visibility.include?(vis)
+    visibilities = %i[public protected private]
+    unless visibilities.include?(visibility)
+      raise "visibility option not recognised: #{visibility.inspect}"
+    end
+    visibilities = visibilities[0..visibilities.find_index(visibility)]
 
+    visibilities.map do |vis|
       lister = LIST_METHODS[method_type][vis]
       receiver.public_send(lister, false) - Object.public_send(lister)
     end.compact.flatten

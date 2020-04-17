@@ -156,7 +156,7 @@ class TestTraceWrapper < Minitest::Test
                    .gsub!(/@([^@]*)@/, "#{PURPLE}\\1#{CLEAR}")
 
     subject = lambda do |tracer|
-      tracer.wrap(PlayClass, visibility: %i[public protected private])
+      tracer.wrap(PlayClass, visibility: :private)
       result = PlayClass.new.play_solitaire(2, 3)
 
       assert_equal('solo: 2, 3', result)
