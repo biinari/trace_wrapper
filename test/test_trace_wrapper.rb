@@ -77,7 +77,7 @@ class TestTraceWrapper < Minitest::Test
                    .gsub!('TWO', "#{TEAL}two#{CLEAR}")
 
     subject = lambda do |tracer|
-      tracer.wrap(PlayModule, method_type: :methods)
+      tracer.wrap(PlayModule, method_type: :self)
       result = PlayModule.two do
         PlayModule.one('abc')
       end
@@ -143,7 +143,7 @@ class TestTraceWrapper < Minitest::Test
                    .gsub!(/ARG\((\d+)\)/, "#{PURPLE}\\1#{CLEAR}")
 
     subject = lambda do |tracer|
-      tracer.wrap(PlayFib, method_type: :instance_methods)
+      tracer.wrap(PlayFib, method_type: :instance)
       result = PlayFib.new.fib(4)
 
       assert_equal(5, result)

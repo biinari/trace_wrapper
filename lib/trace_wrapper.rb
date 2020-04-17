@@ -53,18 +53,18 @@ class TraceWrapper
   # Options
   #
   # :method_type - Types of methods to wrap (default: :all). Choices are:
-  #                :instance_methods for methods on instances of receiver(s)
-  #                :methods for methods called directly on the receiver(s)
+  #                :instance for methods on instances of receiver(s)
+  #                :self for methods called directly on the receiver(s)
   #                :all for both
   #
   # If a block is given, the wrappers will be created just around the block
   def wrap(*receivers, method_type: :all)
     unwrappers = []
     [*receivers].each do |receiver|
-      if %i[all methods].include?(method_type)
+      if %i[all self].include?(method_type)
         unwrappers += wrap_methods(receiver)
       end
-      if %i[all instance_methods].include?(method_type)
+      if %i[all instance].include?(method_type)
         unwrappers += wrap_instance_methods(receiver)
       end
     end
@@ -92,7 +92,7 @@ class TraceWrapper
   def wrap_methods(*receivers)
     unwrappers = []
     [*receivers].each do |receiver|
-      mod, unwrapper = wrapping_module(receiver, :methods)
+      mod, unwrapper = wrapping_module(receiver, :self)
       unwrappers << unwrapper
       receiver.singleton_class.send(:prepend, mod)
     end
@@ -104,17 +104,17 @@ class TraceWrapper
   def wrap_instance_methods(*receivers)
     unwrappers = []
     [*receivers].each do |receiver|
-      mod, unwrapper = wrapping_module(receiver, :instance_methods)
+      mod, unwrapper = wrapping_module(receiver, :instance)
       unwrappers << unwrapper
       receiver.send(:prepend, mod)
     end
     unwrappers
   end
 
-  def wrapping_module(receiver, methods_type)
-    method_names = receiver.public_send(methods_type) - Object.methods
-    get_method = methods_type == :methods ? :method : :instance_method
-    dot = methods_type == :methods ? '.' : '#'
+  def wrapping_module(receiver, method_type)
+    method_names = get_methods(receiver, method_type)
+    get_method = method_type == :instance ? :instance_method : :method
+    dot = method_type == :instance ? '#' : '.'
     trace_call = method(:trace_call)
     trace_return = method(:trace_return)
     key_args = method(:key_args?)
@@ -146,6 +146,11 @@ class TraceWrapper
       end
     end
     [mod, unwrapper]
+  end
+
+  def get_methods(receiver, method_type)
+    lister = method_type == :instance ? :instance_methods : :methods
+    receiver.public_send(lister, false) - Object.public_send(lister)
   end
 
   def trace_call(receiver, dot, method_name, *args, **kwargs)
