@@ -64,7 +64,7 @@ What is the answer to the ultimate question?
 42
 ```
 
-See [custom example](examples/custom.rb) for a more custom usage
+See [custom example](https://github.com/biinari/trace_wrapper/blob/master/examples/custom.rb) for a more custom usage
 
 ### Options
 
